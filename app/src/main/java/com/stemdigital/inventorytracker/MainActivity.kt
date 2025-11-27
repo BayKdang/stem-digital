@@ -47,8 +47,7 @@ class MainActivity : AppCompatActivity() {
                     true
                 }
                 R.id.nav_info -> {
-                    Toast. makeText(this, "Info", Toast.LENGTH_SHORT).show()
-                    // TODO: Navigate to Info Fragment
+                    loadFragment(InfoFragment())
                     true
                 }
                 else -> false
