@@ -34,8 +34,7 @@ class MainActivity : AppCompatActivity() {
                     true
                 }
                 R.id.nav_inventory -> {
-                    Toast.makeText(this, "Inventory", Toast.LENGTH_SHORT).show()
-                    // TODO: Navigate to Inventory Fragment
+                    loadFragment(InventoryFragment())
                     true
                 }
                 R.id.nav_add -> {
