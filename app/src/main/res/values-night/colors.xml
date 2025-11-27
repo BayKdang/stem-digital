@@ -1,28 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Primary Colors -->
+    <!-- Primary Colors (Dark Mode) -->
     <color name="primary_navy">#1a3a52</color>
     <color name="primary_navy_dark">#0f2438</color>
     <color name="primary_navy_light">#2d5a7b</color>
 
-    <!-- Secondary Colors (Grey) -->
+    <!-- Secondary Colors (Grey - Dark Mode) -->
     <color name="secondary_grey">#6c757d</color>
     <color name="secondary_grey_dark">#495057</color>
     <color name="secondary_grey_light">#adb5bd</color>
 
-    <!-- Neutral Colors -->
+    <!-- Neutral Colors (Dark Mode) -->
     <color name="white">#ffffff</color>
     <color name="black">#000000</color>
-    <color name="background_light">#f8f9fa</color>
+    <color name="background_light">#121212</color>
 
-    <!-- Status Colors -->
+    <!-- Status Colors (Dark Mode) -->
     <color name="success_green">#28a745</color>
     <color name="warning_orange">#ffc107</color>
     <color name="error_red">#dc3545</color>
     <color name="info_blue">#17a2b8</color>
 
-    <!-- Text Colors -->
-    <color name="text_primary">#1a3a52</color>
-    <color name="text_secondary">#6c757d</color>
+    <!-- Text Colors (Dark Mode) -->
+    <color name="text_primary">#e0e0e0</color>
+    <color name="text_secondary">#b0b0b0</color>
     <color name="text_light">#ffffff</color>
+
+    <!-- Legacy Colors (for compatibility) -->
+    <color name="teal_200">#80deea</color>
+    <color name="teal_700">#00897b</color>
+    <color name="purple_200">#bb86fc</color>
+    <color name="purple_500">#6200ee</color>
+    <color name="purple_700">#3700b3</color>
 </resources>

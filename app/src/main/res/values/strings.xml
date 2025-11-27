@@ -1,3 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">StemDigital</string>
+    <string name="app_description">Inventory Tracker for STEM Building</string>
+
+    <!-- Bottom Navigation Labels -->
+    <string name="nav_home">Home</string>
+    <string name="nav_inventory">Inventory</string>
+    <string name="nav_add">Add</string>
+    <string name="nav_settings">Settings</string>
+    <string name="nav_info">Info</string>
+
+    <!-- Common Actions -->
+    <string name="action_logout">Logout</string>
+    <string name="action_login">Login</string>
+    <string name="action_save">Save</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_edit">Edit</string>
 </resources>
