@@ -43,8 +43,7 @@ class MainActivity : AppCompatActivity() {
                     true
                 }
                 R.id.nav_settings -> {
-                    Toast.makeText(this, "Settings", Toast.LENGTH_SHORT).show()
-                    // TODO: Navigate to Settings Fragment
+                    loadFragment(SettingsFragment())
                     true
                 }
                 R.id.nav_info -> {
