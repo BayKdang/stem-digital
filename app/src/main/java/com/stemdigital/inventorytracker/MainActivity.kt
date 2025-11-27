@@ -38,8 +38,7 @@ class MainActivity : AppCompatActivity() {
                     true
                 }
                 R.id.nav_add -> {
-                    Toast.makeText(this, "Add Item", Toast.LENGTH_SHORT).show()
-                    // TODO: Open Add Item Dialog/Activity
+                    loadFragment(AddItemFragment())
                     true
                 }
                 R.id.nav_settings -> {
