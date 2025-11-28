@@ -37,4 +37,8 @@ interface ItemDAO {
     // Get item count
     @Query("SELECT COUNT(*) FROM items")
     fun getItemCount(): Flow<Int>
+
+//    get item by id
+    @Query("SELECT * FROM items WHERE id = :id")
+    suspend fun getItemById(id: Int): Item?
 }
