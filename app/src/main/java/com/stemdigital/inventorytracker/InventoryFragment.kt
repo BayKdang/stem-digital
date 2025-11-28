@@ -68,8 +68,18 @@ class InventoryFragment : Fragment() {
         itemAdapter = ItemAdapter(
             emptyList(),
             onEdit = { item ->
-                // TODO: Navigate to edit fragment with item data
-                android.widget.Toast.makeText(requireContext(), "Edit: ${item.name}", android.widget.Toast.LENGTH_SHORT).show()
+                // Navigate to EditItemFragment with item ID
+                val bundle = Bundle(). apply {
+                    putInt("item_id", item.id)
+                }
+                val editFragment = EditItemFragment(). apply {
+                    arguments = bundle
+                }
+                // Replace current fragment with EditItemFragment
+                parentFragmentManager.beginTransaction()
+                    .replace(R.id.fragment_container, editFragment)
+                    .addToBackStack(null)
+                    .commit()
             },
             onDelete = { item ->
                 // Show confirmation dialog
