@@ -6,34 +6,42 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
-import android.widget.Toast
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.button.MaterialButton
-import com.google.android.material.textfield.MaterialAutoCompleteTextView
+import com.google.android.material.textfield. MaterialAutoCompleteTextView
 import com. google.android.material.textfield.TextInputEditText
+import com.stemdigital.inventorytracker. AppDatabase
 import kotlinx.coroutines.launch
 
 class AddItemFragment : Fragment() {
 
-    private lateinit var etItemName: TextInputEditText
-    private lateinit var etItemQuantity: TextInputEditText
-    private lateinit var etItemCategory: MaterialAutoCompleteTextView
-    private lateinit var etItemDescription: TextInputEditText
-    private lateinit var btnCancel: MaterialButton
-    private lateinit var btnAddItem: MaterialButton
+    private lateinit var nameInput: TextInputEditText
+    private lateinit var quantityInput: TextInputEditText
+    private lateinit var categoryDropdown: MaterialAutoCompleteTextView
+    private lateinit var serialNumberInput: TextInputEditText
+    private lateinit var statusDropdown: MaterialAutoCompleteTextView
+    private lateinit var descriptionInput: TextInputEditText
+    private lateinit var addButton: MaterialButton
+    private lateinit var cancelButton: MaterialButton
     private lateinit var repository: ItemRepository
 
-    // Category list
     private val categories = listOf(
         "Projectors",
-        "DP",
-        "HDMI",
+        "Cables",
         "Strips",
         "Electronics",
         "Sensors",
         "Microcontrollers",
         "Resistors",
         "Capacitors"
+    )
+
+    private val statuses = listOf(
+        "Available",
+        "In Use",
+        "Damaged",
+        "Maintenance",
+        "Archived"
     )
 
     override fun onCreateView(
@@ -52,98 +60,114 @@ class AddItemFragment : Fragment() {
         repository = ItemRepository(database.itemDAO())
 
         // Initialize views
-        etItemName = view.findViewById(R.id.et_item_name)
-        etItemQuantity = view.findViewById(R.id.et_item_quantity)
-        etItemCategory = view.findViewById(R.id.et_item_category)
-        etItemDescription = view.findViewById(R.id.et_item_description)
-        btnCancel = view.findViewById(R.id.btn_cancel)
-        btnAddItem = view.findViewById(R.id.btn_add_item)
+        nameInput = view.findViewById(R.id.et_item_name)
+        quantityInput = view.findViewById(R.id.et_item_quantity)
+        categoryDropdown = view.findViewById(R.id.et_item_category)
+        serialNumberInput = view.findViewById(R.id.et_item_serial_number)
+        statusDropdown = view.findViewById(R.id.et_item_status)
+        descriptionInput = view.findViewById(R.id.et_item_description)
+        addButton = view.findViewById(R.id.btn_add_item)
+        cancelButton = view.findViewById(R.id.btn_cancel)
 
-        // Setup category dropdown
+        // Setup dropdowns
         setupCategoryDropdown()
+        setupStatusDropdown()
 
-        // Cancel button listener
-        btnCancel.setOnClickListener {
-            clearAllFields()
-            Toast.makeText(requireContext(), "Cancelled", Toast.LENGTH_SHORT).show()
-            // TODO: Navigate back to inventory fragment
+        // Add button click listener
+        addButton.setOnClickListener {
+            addItem()
         }
 
-        // Add Item button listener
-        btnAddItem.setOnClickListener {
-            validateAndAddItem()
+        // Cancel button click listener
+        cancelButton.setOnClickListener {
+            clearInputs()
         }
     }
 
     private fun setupCategoryDropdown() {
-        // Create adapter for dropdown
         val adapter = ArrayAdapter(
             requireContext(),
             android.R.layout.simple_dropdown_item_1line,
             categories
         )
+        categoryDropdown.setAdapter(adapter)
 
-        // Set adapter to dropdown
-        etItemCategory.setAdapter(adapter)
-
-        // Set dropdown height
-        etItemCategory.setDropDownHeight(800)
-
-        // Show dropdown when clicked
-        etItemCategory.setOnClickListener {
-            etItemCategory.requestFocus()
-            etItemCategory.showDropDown()
+        categoryDropdown.setOnClickListener {
+            categoryDropdown.requestFocus()
+            categoryDropdown.showDropDown()
         }
     }
 
-    private fun validateAndAddItem() {
-        val itemName = etItemName.text?.toString()?.trim() ?: ""
-        val itemQuantity = etItemQuantity.text?.toString()?.trim() ?: ""
-        val itemCategory = etItemCategory.text?.toString()?.trim() ?: ""
-        val itemDescription = etItemDescription.text?.toString()?.trim() ?: ""
+    private fun setupStatusDropdown() {
+        val adapter = ArrayAdapter(
+            requireContext(),
+            android.R.layout.simple_dropdown_item_1line,
+            statuses
+        )
+        statusDropdown.setAdapter(adapter)
+        statusDropdown.setText("Available", false) // Set default value
+
+        statusDropdown.setOnClickListener {
+            statusDropdown.requestFocus()
+            statusDropdown.showDropDown()
+        }
+    }
+
+    private fun addItem() {
+        val name = nameInput.text.toString().trim()
+        val quantityStr = quantityInput.text.toString().trim()
+        val category = categoryDropdown.text.toString().trim()
+        val serialNumber = serialNumberInput.text.toString().trim()
+        val status = statusDropdown.text.toString().trim()
+        val description = descriptionInput.text.toString().trim()
 
         // Validation
-        when {
-            itemName.isEmpty() -> {
-                etItemName.error = "Item name is required"
-                Toast.makeText(requireContext(), "Please enter item name", Toast.LENGTH_SHORT).show()
-            }
-            itemQuantity.isEmpty() -> {
-                etItemQuantity.error = "Quantity is required"
-                Toast.makeText(requireContext(), "Please enter quantity", Toast.LENGTH_SHORT).show()
-            }
-            itemCategory.isEmpty() -> {
-                Toast.makeText(requireContext(), "Please select a category", Toast.LENGTH_SHORT).show()
-            }
-            else -> {
-                // All validations passed - Save to database
-                val quantity = itemQuantity.toIntOrNull() ?: 0
-                val newItem = Item(
-                    name = itemName,
-                    quantity = quantity,
-                    category = itemCategory,
-                    description = itemDescription
-                )
+        if (name.isEmpty()) {
+            nameInput.error = "Item name is required"
+            return
+        }
 
-                // Save to database using coroutine
-                lifecycleScope.launch {
-                    repository.insertItem(newItem)
-                    Toast.makeText(
-                        requireContext(),
-                        "Item added: $itemName (Qty: $quantity)",
-                        Toast.LENGTH_SHORT
-                    ). show()
-                    clearAllFields()
-                    // TODO: Navigate back to inventory fragment
-                }
-            }
+        if (quantityStr.isEmpty()) {
+            quantityInput.error = "Quantity is required"
+            return
+        }
+
+        if (category.isEmpty()) {
+            android.widget.Toast.makeText(requireContext(), "Please select a category", android.widget.Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        if (status.isEmpty()) {
+            android.widget.Toast.makeText(requireContext(), "Please select a status", android.widget.Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val quantity = quantityStr.toIntOrNull() ?: 0
+
+        // Create new item
+        val newItem = Item(
+            name = name,
+            quantity = quantity,
+            category = category,
+            serialNumber = serialNumber,
+            status = status,
+            description = description
+        )
+
+        // Add to database
+        lifecycleScope.launch {
+            repository.insertItem(newItem)
+            android.widget.Toast.makeText(requireContext(), "Item added successfully!", android.widget.Toast.LENGTH_SHORT).show()
+            clearInputs()
         }
     }
 
-    private fun clearAllFields() {
-        etItemName.text?.clear()
-        etItemQuantity.text?.clear()
-        etItemCategory.text?.clear()
-        etItemDescription.text?.clear()
+    private fun clearInputs() {
+        nameInput.text?.clear()
+        quantityInput.text?.clear()
+        categoryDropdown.text?.clear()
+        serialNumberInput.text?.clear()
+        statusDropdown.setText("Available", false)
+        descriptionInput.text?.clear()
     }
 }

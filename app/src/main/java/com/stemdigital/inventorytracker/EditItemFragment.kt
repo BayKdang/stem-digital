@@ -18,6 +18,8 @@ class EditItemFragment : Fragment() {
     private lateinit var nameInput: TextInputEditText
     private lateinit var quantityInput: TextInputEditText
     private lateinit var categoryDropdown: MaterialAutoCompleteTextView
+    private lateinit var serialNumberInput: TextInputEditText
+    private lateinit var statusDropdown: MaterialAutoCompleteTextView
     private lateinit var descriptionInput: TextInputEditText
     private lateinit var updateButton: MaterialButton
     private lateinit var cancelButton: MaterialButton
@@ -28,14 +30,21 @@ class EditItemFragment : Fragment() {
 
     private val categories = listOf(
         "Projectors",
-        "DP",
-        "HDMI",
+        "Cables",
         "Strips",
         "Electronics",
         "Sensors",
         "Microcontrollers",
         "Resistors",
         "Capacitors"
+    )
+
+    private val statuses = listOf(
+        "Available",
+        "In Use",
+        "Damaged",
+        "Maintenance",
+        "Archived"
     )
 
     override fun onCreateView(
@@ -56,10 +65,12 @@ class EditItemFragment : Fragment() {
         // Get item ID from arguments
         itemId = arguments?.getInt("item_id", -1) ?: -1
 
-        // Initialize views - Match the actual IDs from fragment_add_item.xml
+        // Initialize views
         nameInput = view.findViewById(R.id.et_item_name)
         quantityInput = view.findViewById(R.id.et_item_quantity)
         categoryDropdown = view.findViewById(R.id.et_item_category)
+        serialNumberInput = view.findViewById(R.id.et_item_serial_number)
+        statusDropdown = view. findViewById(R.id.et_item_status)
         descriptionInput = view.findViewById(R.id.et_item_description)
         updateButton = view.findViewById(R.id.btn_add_item)
         cancelButton = view.findViewById(R.id.btn_cancel)
@@ -71,8 +82,9 @@ class EditItemFragment : Fragment() {
         view.findViewById<android.widget.TextView>(R.id.add_item_title).text = "Edit Item"
         view.findViewById<android.widget.TextView>(R.id.add_item_subtitle).text = "Update the details below"
 
-        // Setup category dropdown
+        // Setup dropdowns
         setupCategoryDropdown()
+        setupStatusDropdown()
 
         // Load item data
         loadItemData()
@@ -84,7 +96,6 @@ class EditItemFragment : Fragment() {
 
         // Cancel button click listener
         cancelButton.setOnClickListener {
-            // Just navigate away using bottom nav
             parentFragmentManager.popBackStack()
         }
     }
@@ -100,6 +111,20 @@ class EditItemFragment : Fragment() {
         categoryDropdown.setOnClickListener {
             categoryDropdown.requestFocus()
             categoryDropdown.showDropDown()
+        }
+    }
+
+    private fun setupStatusDropdown() {
+        val adapter = ArrayAdapter(
+            requireContext(),
+            android.R.layout.simple_dropdown_item_1line,
+            statuses
+        )
+        statusDropdown.setAdapter(adapter)
+
+        statusDropdown.setOnClickListener {
+            statusDropdown.requestFocus()
+            statusDropdown.showDropDown()
         }
     }
 
@@ -121,6 +146,8 @@ class EditItemFragment : Fragment() {
                 nameInput.setText(currentItem.name)
                 quantityInput.setText(currentItem.quantity.toString())
                 categoryDropdown.setText(currentItem.category, false)
+                serialNumberInput.setText(currentItem.serialNumber)
+                statusDropdown.setText(currentItem.status, false)
                 descriptionInput.setText(currentItem.description)
             }
         }
@@ -130,7 +157,9 @@ class EditItemFragment : Fragment() {
         val name = nameInput.text.toString().trim()
         val quantityStr = quantityInput.text.toString().trim()
         val category = categoryDropdown.text.toString().trim()
-        val description = descriptionInput.text. toString().trim()
+        val serialNumber = serialNumberInput.text.toString().trim()
+        val status = statusDropdown.text.toString().trim()
+        val description = descriptionInput.text.toString().trim()
 
         // Validation
         if (name.isEmpty()) {
@@ -143,10 +172,19 @@ class EditItemFragment : Fragment() {
             return
         }
 
-        if (category.isEmpty()) {
+        if (category. isEmpty()) {
             android.widget.Toast.makeText(
                 requireContext(),
                 "Please select a category",
+                android.widget.Toast.LENGTH_SHORT
+            ).show()
+            return
+        }
+
+        if (status. isEmpty()) {
+            android.widget.Toast.makeText(
+                requireContext(),
+                "Please select a status",
                 android.widget.Toast.LENGTH_SHORT
             ).show()
             return
@@ -159,18 +197,19 @@ class EditItemFragment : Fragment() {
             name = name,
             quantity = quantity,
             category = category,
+            serialNumber = serialNumber,
+            status = status,
             description = description
         )
 
         // Update in database
-        lifecycleScope.launch {
+        lifecycleScope. launch {
             repository.updateItem(updatedItem)
             android.widget.Toast.makeText(
                 requireContext(),
                 "Item updated successfully! ",
                 android.widget.Toast.LENGTH_SHORT
             ).show()
-            // Navigate back
             parentFragmentManager.popBackStack()
         }
     }
