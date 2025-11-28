@@ -7,9 +7,11 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.Toast
+import androidx.lifecycle.lifecycleScope
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.MaterialAutoCompleteTextView
 import com. google.android.material.textfield.TextInputEditText
+import kotlinx.coroutines.launch
 
 class AddItemFragment : Fragment() {
 
@@ -19,12 +21,13 @@ class AddItemFragment : Fragment() {
     private lateinit var etItemDescription: TextInputEditText
     private lateinit var btnCancel: MaterialButton
     private lateinit var btnAddItem: MaterialButton
+    private lateinit var repository: ItemRepository
 
     // Category list
     private val categories = listOf(
         "Projectors",
-        "Cables (DP)",
-        "Cables (HDMI)",
+        "DP",
+        "HDMI",
         "Strips",
         "Electronics",
         "Sensors",
@@ -44,6 +47,10 @@ class AddItemFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // Initialize database
+        val database = AppDatabase.getDatabase(requireContext())
+        repository = ItemRepository(database.itemDAO())
+
         // Initialize views
         etItemName = view.findViewById(R.id.et_item_name)
         etItemQuantity = view.findViewById(R.id.et_item_quantity)
@@ -57,12 +64,8 @@ class AddItemFragment : Fragment() {
 
         // Cancel button listener
         btnCancel.setOnClickListener {
-            // Clear all fields
-            etItemName. text?. clear()
-            etItemQuantity.text?.clear()
-            etItemCategory.text?.clear()
-            etItemDescription.text?.clear()
-            Toast.makeText(requireContext(), "Cancelled", Toast.LENGTH_SHORT). show()
+            clearAllFields()
+            Toast.makeText(requireContext(), "Cancelled", Toast.LENGTH_SHORT).show()
             // TODO: Navigate back to inventory fragment
         }
 
@@ -88,15 +91,15 @@ class AddItemFragment : Fragment() {
 
         // Show dropdown when clicked
         etItemCategory.setOnClickListener {
-            etItemCategory. requestFocus()
+            etItemCategory.requestFocus()
             etItemCategory.showDropDown()
         }
     }
 
     private fun validateAndAddItem() {
-        val itemName = etItemName.text?.toString()?. trim() ?: ""
+        val itemName = etItemName.text?.toString()?.trim() ?: ""
         val itemQuantity = etItemQuantity.text?.toString()?.trim() ?: ""
-        val itemCategory = etItemCategory.text?.toString()?. trim() ?: ""
+        val itemCategory = etItemCategory.text?.toString()?.trim() ?: ""
         val itemDescription = etItemDescription.text?.toString()?.trim() ?: ""
 
         // Validation
@@ -113,22 +116,34 @@ class AddItemFragment : Fragment() {
                 Toast.makeText(requireContext(), "Please select a category", Toast.LENGTH_SHORT).show()
             }
             else -> {
-                // All validations passed
-                Toast.makeText(
-                    requireContext(),
-                    "Item added: $itemName (Qty: $itemQuantity)",
-                    Toast.LENGTH_SHORT
-                ).show()
+                // All validations passed - Save to database
+                val quantity = itemQuantity.toIntOrNull() ?: 0
+                val newItem = Item(
+                    name = itemName,
+                    quantity = quantity,
+                    category = itemCategory,
+                    description = itemDescription
+                )
 
-                // TODO: Save item to database
-                // Clear fields after adding
-                etItemName.text?.clear()
-                etItemQuantity.text?.clear()
-                etItemCategory.text?.clear()
-                etItemDescription.text?.clear()
-
-                // TODO: Navigate back to inventory fragment
+                // Save to database using coroutine
+                lifecycleScope.launch {
+                    repository.insertItem(newItem)
+                    Toast.makeText(
+                        requireContext(),
+                        "Item added: $itemName (Qty: $quantity)",
+                        Toast.LENGTH_SHORT
+                    ). show()
+                    clearAllFields()
+                    // TODO: Navigate back to inventory fragment
+                }
             }
         }
+    }
+
+    private fun clearAllFields() {
+        etItemName.text?.clear()
+        etItemQuantity.text?.clear()
+        etItemCategory.text?.clear()
+        etItemDescription.text?.clear()
     }
 }
