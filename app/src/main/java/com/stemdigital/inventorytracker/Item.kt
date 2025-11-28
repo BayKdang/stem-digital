@@ -11,5 +11,7 @@ data class Item(
     val quantity: Int,
     val category: String,
     val description: String = "",
+    val serialNumber: String = "",
+    val status: String = "Available",
     val createdAt: Long = System.currentTimeMillis()
 )
