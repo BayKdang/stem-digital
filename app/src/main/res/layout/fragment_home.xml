@@ -100,7 +100,20 @@
             android:textSize="16sp"
             app:backgroundTint="@color/secondary_grey"
             app:cornerRadius="8dp"
-            android:layout_marginBottom="24dp" />
+            android:layout_marginBottom="12dp" />
+
+        <!-- Add this button after the "View Inventory" button in fragment_home.xml -->
+
+        <!-- View Borrow History Button -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_view_borrow_history"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="View Borrow History"
+            android:textSize="16sp"
+            app:backgroundTint="@color/secondary_grey"
+            app:cornerRadius="8dp"
+            android:layout_marginBottom="12dp" />
 
         <!-- Recent Borrow List Section -->
         <TextView

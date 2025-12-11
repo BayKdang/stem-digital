@@ -1,36 +1,36 @@
 package com.stemdigital.inventorytracker
 
 import android.os.Bundle
-import androidx.fragment. app.Fragment
+import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
-import android. view.ViewGroup
-import android. widget.LinearLayout
-import android.widget.TextView
+import android.view.ViewGroup
+import android.widget.LinearLayout
 import android.widget.Toast
-import androidx. appcompat.app.AlertDialog
+import androidx.appcompat.app.AlertDialog
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget. RecyclerView
-import com. google.android.material.button.MaterialButton
+import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.button.MaterialButton
+import com.google.android.material.tabs.TabLayout
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
-class HomeFragment : Fragment() {
+class BorrowHistoryFragment : Fragment() {
 
-    private lateinit var repository: ItemRepository
     private lateinit var borrowRepository: BorrowRepository
-    private lateinit var borrowListAdapter: BorrowListAdapter
-    private lateinit var recentBorrowRecyclerView: RecyclerView
+    private lateinit var borrowListAdapter:  BorrowListAdapter
+    private lateinit var recyclerView: RecyclerView
     private lateinit var emptyStateContainer: LinearLayout
-    private lateinit var totalItemsCount: TextView
+    private lateinit var tabLayout: TabLayout
+    private var currentFilter = "All"
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        return inflater.inflate(R.layout.fragment_home, container, false)
+        return inflater.inflate(R.layout. fragment_borrow_history, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -38,17 +38,14 @@ class HomeFragment : Fragment() {
 
         // Initialize database
         val database = AppDatabase.getDatabase(requireContext())
-        repository = ItemRepository(database. itemDAO())
-        borrowRepository = BorrowRepository(database.borrowListDAO())
+        borrowRepository = BorrowRepository(database. borrowListDAO())
 
         // Initialize views
-        val btnCreateBorrow:  MaterialButton = view.findViewById(R.id.btn_create_borrow)
-        val btnViewInventory: MaterialButton = view.findViewById(R.id.btn_view_inventory)
-        recentBorrowRecyclerView = view.findViewById(R.id.recent_borrow_list)
-        emptyStateContainer = view.findViewById(R.id. empty_state_container)
-        totalItemsCount = view.findViewById(R.id.total_items_count)
+        recyclerView = view.findViewById(R.id.borrow_history_recycler)
+        emptyStateContainer = view.findViewById(R.id.empty_state_borrow)
+        tabLayout = view.findViewById(R.id.tab_layout)
 
-        // Setup RecyclerView with click handlers
+        // Setup RecyclerView
         borrowListAdapter = BorrowListAdapter(
             borrowLists = emptyList(),
             onViewDetails = { borrowList ->
@@ -61,65 +58,53 @@ class HomeFragment : Fragment() {
                 confirmDeleteBorrowList(borrowList)
             }
         )
-        recentBorrowRecyclerView. layoutManager = LinearLayoutManager(requireContext())
-        recentBorrowRecyclerView.adapter = borrowListAdapter
+        recyclerView.layoutManager = LinearLayoutManager(requireContext())
+        recyclerView.adapter = borrowListAdapter
 
-        // Load total items count
-        loadTotalItemsCount()
+        // Setup tabs
+        setupTabs()
 
-        // Load recent borrow lists
-        loadRecentBorrowLists()
-
-        // Create Borrow List button click listener
-        btnCreateBorrow. setOnClickListener {
-            parentFragmentManager.beginTransaction()
-                .replace(R.id. fragment_container, CreateBorrowFragment())
-                .addToBackStack(null)
-                .commit()
-        }
-
-        // View Inventory button click listener
-        btnViewInventory.setOnClickListener {
-            parentFragmentManager.beginTransaction()
-                .replace(R.id.fragment_container, InventoryFragment())
-                .addToBackStack(null)
-                .commit()
-        }
-
-        val btnViewBorrowHistory:  MaterialButton = view.findViewById(R.id.btn_view_borrow_history)
-
-        btnViewBorrowHistory.setOnClickListener {
-            parentFragmentManager.beginTransaction()
-                .replace(R.id.fragment_container, BorrowHistoryFragment())
-                .addToBackStack(null)
-                .commit()
-        }
+        // Load all borrow lists initially
+        loadBorrowLists("All")
     }
 
-    private fun loadTotalItemsCount() {
-        lifecycleScope.launch {
-            repository.getAllItems().collectLatest { items ->
-                val totalCount = items.sumOf { it. quantity }
-                totalItemsCount.text = totalCount.toString()
+    private fun setupTabs() {
+        tabLayout.addTab(tabLayout.newTab().setText("All"))
+        tabLayout.addTab(tabLayout.newTab().setText("Pending"))
+        tabLayout.addTab(tabLayout.newTab().setText("Returned"))
+
+        tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
+            override fun onTabSelected(tab: TabLayout.Tab?) {
+                currentFilter = tab?.text.toString()
+                loadBorrowLists(currentFilter)
             }
-        }
+
+            override fun onTabUnselected(tab: TabLayout.Tab?) {}
+            override fun onTabReselected(tab: TabLayout. Tab?) {}
+        })
     }
 
-    private fun loadRecentBorrowLists() {
+    private fun loadBorrowLists(filter: String) {
         lifecycleScope.launch {
-            borrowRepository.getRecentBorrowLists().collectLatest { borrowLists ->
+            val flow = when (filter) {
+                "Pending" -> borrowRepository.getBorrowListsByStatus("Pending")
+                "Returned" -> borrowRepository.getBorrowListsByStatus("Returned")
+                else -> borrowRepository.getAllBorrowLists()
+            }
+
+            flow.collectLatest { borrowLists ->
                 if (borrowLists.isEmpty()) {
                     emptyStateContainer.visibility = View.VISIBLE
-                    recentBorrowRecyclerView.visibility = View.GONE
+                    recyclerView.visibility = View.GONE
                 } else {
-                    emptyStateContainer. visibility = View.GONE
-                    recentBorrowRecyclerView.visibility = View. VISIBLE
+                    emptyStateContainer.visibility = View.GONE
+                    recyclerView.visibility = View.VISIBLE
                     borrowListAdapter. updateBorrowLists(borrowLists)
 
                     // Load items for each borrow list
                     val itemsMap = mutableMapOf<Int, List<BorrowListItem>>()
                     borrowLists.forEach { borrowList ->
-                        val items = borrowRepository.getBorrowListItems(borrowList. id)
+                        val items = borrowRepository.getBorrowListItems(borrowList.id)
                         itemsMap[borrowList.id] = items
                     }
                     borrowListAdapter.updateBorrowListItems(itemsMap)
@@ -129,9 +114,9 @@ class HomeFragment : Fragment() {
     }
 
     private fun viewBorrowDetails(borrowList: BorrowList) {
-        val detailFragment = BorrowDetailFragment.newInstance(borrowList. id)
+        val detailFragment = BorrowDetailFragment.newInstance(borrowList.id)
         parentFragmentManager.beginTransaction()
-            .replace(R.id.fragment_container, detailFragment)
+            .replace(R.id. fragment_container, detailFragment)
             .addToBackStack(null)
             .commit()
     }
@@ -146,10 +131,10 @@ class HomeFragment : Fragment() {
                         status = "Returned",
                         returnDate = System.currentTimeMillis()
                     )
-                    borrowRepository. updateBorrowList(updatedBorrowList)
+                    borrowRepository.updateBorrowList(updatedBorrowList)
                     Toast.makeText(
                         requireContext(),
-                        "Marked as returned successfully! ",
+                        "Marked as returned successfully!",
                         Toast.LENGTH_SHORT
                     ).show()
                 }
@@ -161,7 +146,7 @@ class HomeFragment : Fragment() {
     private fun confirmDeleteBorrowList(borrowList: BorrowList) {
         AlertDialog.Builder(requireContext())
             .setTitle("Delete Borrow List")
-            .setMessage("Are you sure you want to delete this borrow list?  This action cannot be undone.")
+            .setMessage("Are you sure you want to delete this borrow list? This action cannot be undone.")
             .setPositiveButton("Delete") { _, _ ->
                 deleteBorrowList(borrowList)
             }
