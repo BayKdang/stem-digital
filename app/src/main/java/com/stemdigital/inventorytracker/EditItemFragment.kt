@@ -148,7 +148,7 @@ class EditItemFragment : Fragment() {
                 categoryDropdown.setText(currentItem.category, false)
                 serialNumberInput.setText(currentItem.serialNumber)
                 statusDropdown.setText(currentItem.status, false)
-                descriptionInput.setText(currentItem.description)
+                descriptionInput.setText(currentItem.notes)
             }
         }
     }
@@ -159,7 +159,7 @@ class EditItemFragment : Fragment() {
         val category = categoryDropdown.text.toString().trim()
         val serialNumber = serialNumberInput.text.toString().trim()
         val status = statusDropdown.text.toString().trim()
-        val description = descriptionInput.text.toString().trim()
+        val notes = descriptionInput.text.toString().trim()
 
         // Validation
         if (name.isEmpty()) {
@@ -199,7 +199,7 @@ class EditItemFragment : Fragment() {
             category = category,
             serialNumber = serialNumber,
             status = status,
-            description = description
+            notes = notes
         )
 
         // Update in database

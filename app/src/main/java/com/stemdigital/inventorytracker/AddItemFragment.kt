@@ -8,14 +8,14 @@ import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.button.MaterialButton
-import com.google.android.material.textfield. MaterialAutoCompleteTextView
-import com. google.android.material.textfield.TextInputEditText
-import com.stemdigital.inventorytracker. AppDatabase
+import com.google.android.material.textfield.MaterialAutoCompleteTextView
+import com.google.android.material.textfield.TextInputEditText
+import com.stemdigital.inventorytracker.AppDatabase
 import kotlinx.coroutines.launch
 
 class AddItemFragment : Fragment() {
 
-    private lateinit var nameInput: TextInputEditText
+    private lateinit var nameInput:  TextInputEditText
     private lateinit var quantityInput: TextInputEditText
     private lateinit var categoryDropdown: MaterialAutoCompleteTextView
     private lateinit var serialNumberInput: TextInputEditText
@@ -26,9 +26,12 @@ class AddItemFragment : Fragment() {
     private lateinit var repository: ItemRepository
 
     private val categories = listOf(
-        "Projectors",
-        "Cables",
-        "Strips",
+        "Projector",
+        "Power Strip",
+        "Cable",
+        "Pointer",
+        "Extension Cord",
+        "Accessory",
         "Electronics",
         "Sensors",
         "Microcontrollers",
@@ -119,7 +122,7 @@ class AddItemFragment : Fragment() {
         val category = categoryDropdown.text.toString().trim()
         val serialNumber = serialNumberInput.text.toString().trim()
         val status = statusDropdown.text.toString().trim()
-        val description = descriptionInput.text.toString().trim()
+        val notes = descriptionInput.text.toString().trim()  // Use descriptionInput for notes
 
         // Validation
         if (name.isEmpty()) {
@@ -133,7 +136,7 @@ class AddItemFragment : Fragment() {
         }
 
         if (category.isEmpty()) {
-            android.widget.Toast.makeText(requireContext(), "Please select a category", android.widget.Toast.LENGTH_SHORT).show()
+            android.widget.Toast.makeText(requireContext(), "Please select a category", android. widget.Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -142,22 +145,31 @@ class AddItemFragment : Fragment() {
             return
         }
 
-        val quantity = quantityStr.toIntOrNull() ?: 0
+        val quantity = quantityStr. toIntOrNull() ?: 0
+
+        if (quantity <= 0) {
+            quantityInput.error = "Quantity must be greater than 0"
+            return
+        }
 
         // Create new item
         val newItem = Item(
             name = name,
-            quantity = quantity,
             category = category,
             serialNumber = serialNumber,
+            quantity = quantity,
+            availableQuantity = quantity,  // Initially all items are available
             status = status,
-            description = description
+            location = "",  // Default empty location (you can add a field for this later)
+            dateAdded = System.currentTimeMillis(),
+            lastUpdated = System.currentTimeMillis(),
+            notes = notes
         )
 
         // Add to database
         lifecycleScope.launch {
             repository.insertItem(newItem)
-            android.widget.Toast.makeText(requireContext(), "Item added successfully!", android.widget.Toast.LENGTH_SHORT).show()
+            android. widget.Toast.makeText(requireContext(), "Item added successfully!", android.widget.Toast.LENGTH_SHORT).show()
             clearInputs()
         }
     }

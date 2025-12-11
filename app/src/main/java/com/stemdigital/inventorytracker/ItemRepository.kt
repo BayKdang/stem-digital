@@ -4,13 +4,32 @@ import kotlinx.coroutines.flow.Flow
 
 class ItemRepository(private val itemDAO: ItemDAO) {
 
-    fun getAllItems(): Flow<List<Item>> = itemDAO.getAllItems()
+    fun getAllItems(): Flow<List<Item>> {
+        return itemDAO.getAllItems()
+    }
 
-    fun getItemsByCategory(category: String): Flow<List<Item>> =
-        itemDAO.getItemsByCategory(category)
+    suspend fun getItemById(id: Int): Item? {
+        return itemDAO.getItemById(id)
+    }
 
-    suspend fun insertItem(item: Item) {
-        itemDAO.insertItem(item)
+    fun getItemsByCategory(category: String): Flow<List<Item>> {
+        return itemDAO.getItemsByCategory(category)
+    }
+
+    fun getItemsByStatus(status: String): Flow<List<Item>> {
+        return itemDAO.getItemsByStatus(status)
+    }
+
+    fun searchItems(query: String): Flow<List<Item>> {
+        return itemDAO.searchItems(query)
+    }
+
+    fun getLowStockItems(): Flow<List<Item>> {
+        return itemDAO.getLowStockItems()
+    }
+
+    suspend fun insertItem(item: Item): Long {
+        return itemDAO.insertItem(item)
     }
 
     suspend fun updateItem(item: Item) {
@@ -18,12 +37,21 @@ class ItemRepository(private val itemDAO: ItemDAO) {
     }
 
     suspend fun deleteItem(item: Item) {
-        itemDAO. deleteItem(item)
+        itemDAO.deleteItem(item)
     }
 
-    suspend fun deleteAllItems() {
-        itemDAO.deleteAllItems()
+    // NEW:  Decrease available quantity when borrowing
+    suspend fun decreaseAvailableQuantity(itemId: Int, quantity: Int) {
+        itemDAO.decreaseAvailableQuantity(itemId, quantity)
     }
 
-    fun getItemCount(): Flow<Int> = itemDAO.getItemCount()
+    // NEW: Increase available quantity when returning
+    suspend fun increaseAvailableQuantity(itemId: Int, quantity: Int) {
+        itemDAO.increaseAvailableQuantity(itemId, quantity)
+    }
+
+    // NEW: Get available items by categories
+    fun getAvailableItemsByCategories(categories: List<String>): Flow<List<Item>> {
+        return itemDAO.getAvailableItemsByCategories(categories)
+    }
 }

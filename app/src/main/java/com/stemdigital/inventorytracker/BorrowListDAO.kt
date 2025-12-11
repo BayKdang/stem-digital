@@ -1,18 +1,26 @@
 package com.stemdigital.inventorytracker
 
-import androidx.room.Dao
-import androidx.room.Delete
-import androidx.room.Insert
-import androidx.room.Query
-import androidx.room.Update
-import kotlinx.coroutines. flow.Flow
+import androidx.room.*
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface BorrowListDAO {
 
-    // Insert borrow list
-    @Insert
+    // Insert a new borrow list
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertBorrowList(borrowList: BorrowList): Long
+
+    // Insert a borrow list item
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertBorrowListItem(borrowListItem: BorrowListItem): Long
+
+    // Update a borrow list
+    @Update
+    suspend fun updateBorrowList(borrowList: BorrowList)
+
+    // Delete a borrow list
+    @Delete
+    suspend fun deleteBorrowList(borrowList: BorrowList)
 
     // Get all borrow lists
     @Query("SELECT * FROM borrow_lists ORDER BY borrowDate DESC")
@@ -22,31 +30,19 @@ interface BorrowListDAO {
     @Query("SELECT * FROM borrow_lists ORDER BY borrowDate DESC LIMIT 5")
     fun getRecentBorrowLists(): Flow<List<BorrowList>>
 
-    // Get borrow list by id
-    @Query("SELECT * FROM borrow_lists WHERE id = :id")
-    suspend fun getBorrowListById(id: Int): BorrowList?
-
-    // Update borrow list
-    @Update
-    suspend fun updateBorrowList(borrowList: BorrowList)
-
-    // Delete borrow list
-    @Delete
-    suspend fun deleteBorrowList(borrowList: BorrowList)
-
     // Get borrow lists by status
     @Query("SELECT * FROM borrow_lists WHERE status = :status ORDER BY borrowDate DESC")
     fun getBorrowListsByStatus(status: String): Flow<List<BorrowList>>
 
-    // Insert borrow list item
-    @Insert
-    suspend fun insertBorrowListItem(borrowListItem: BorrowListItem)
+    // Get a single borrow list by ID
+    @Query("SELECT * FROM borrow_lists WHERE id = :id")
+    suspend fun getBorrowListById(id: Int): BorrowList?
 
-    // Get items in a borrow list
+    // Get items for a specific borrow list
     @Query("SELECT * FROM borrow_list_items WHERE borrowListId = :borrowListId")
     suspend fun getBorrowListItems(borrowListId: Int): List<BorrowListItem>
 
-    // Delete borrow list items
-    @Query("DELETE FROM borrow_list_items WHERE borrowListId = :borrowListId")
-    suspend fun deleteBorrowListItems(borrowListId: Int)
+    // Delete borrow list item
+    @Delete
+    suspend fun deleteBorrowListItem(borrowListItem: BorrowListItem)
 }

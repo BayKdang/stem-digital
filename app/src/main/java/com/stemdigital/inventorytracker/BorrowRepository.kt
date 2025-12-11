@@ -2,25 +2,99 @@ package com.stemdigital.inventorytracker
 
 import kotlinx.coroutines.flow.Flow
 
-class BorrowRepository(private val borrowListDAO: BorrowListDAO) {
+class BorrowRepository(
+    private val borrowListDAO: BorrowListDAO
+) {
 
-    fun getAllBorrowLists(): Flow<List<BorrowList>> = borrowListDAO.getAllBorrowLists()
+    // Insert a new borrow list
+    suspend fun insertBorrowList(borrowList: BorrowList): Long {
+        return borrowListDAO.insertBorrowList(borrowList)
+    }
 
-    fun getRecentBorrowLists(): Flow<List<BorrowList>> = borrowListDAO.getRecentBorrowLists()
+    // Insert a borrow list item
+    suspend fun insertBorrowListItem(borrowListItem: BorrowListItem): Long {
+        return borrowListDAO.insertBorrowListItem(borrowListItem)
+    }
 
-    suspend fun getBorrowListById(id: Int): BorrowList? = borrowListDAO.getBorrowListById(id)
+    // Update a borrow list
+    suspend fun updateBorrowList(borrowList: BorrowList) {
+        borrowListDAO.updateBorrowList(borrowList)
+    }
 
-    suspend fun insertBorrowList(borrowList: BorrowList): Long = borrowListDAO.insertBorrowList(borrowList)
+    // Delete a borrow list
+    suspend fun deleteBorrowList(borrowList: BorrowList) {
+        borrowListDAO.deleteBorrowList(borrowList)
+    }
 
-    suspend fun updateBorrowList(borrowList: BorrowList) = borrowListDAO.updateBorrowList(borrowList)
+    // Get all borrow lists
+    fun getAllBorrowLists(): Flow<List<BorrowList>> {
+        return borrowListDAO.getAllBorrowLists()
+    }
 
-    suspend fun deleteBorrowList(borrowList: BorrowList) = borrowListDAO.deleteBorrowList(borrowList)
+    // Get recent borrow lists
+    fun getRecentBorrowLists(): Flow<List<BorrowList>> {
+        return borrowListDAO.getRecentBorrowLists()
+    }
 
-    fun getBorrowListsByStatus(status: String): Flow<List<BorrowList>> = borrowListDAO.getBorrowListsByStatus(status)
+    // Get borrow lists by status
+    fun getBorrowListsByStatus(status: String): Flow<List<BorrowList>> {
+        return borrowListDAO.getBorrowListsByStatus(status)
+    }
 
-    suspend fun insertBorrowListItem(borrowListItem: BorrowListItem) = borrowListDAO.insertBorrowListItem(borrowListItem)
+    // Get a single borrow list by ID
+    suspend fun getBorrowListById(id: Int): BorrowList? {
+        return borrowListDAO.getBorrowListById(id)
+    }
 
-    suspend fun getBorrowListItems(borrowListId: Int): List<BorrowListItem> = borrowListDAO.getBorrowListItems(borrowListId)
+    // Get items for a borrow list
+    suspend fun getBorrowListItems(borrowListId: Int): List<BorrowListItem> {
+        return borrowListDAO.getBorrowListItems(borrowListId)
+    }
 
-    suspend fun deleteBorrowListItems(borrowListId: Int) = borrowListDAO.deleteBorrowListItems(borrowListId)
+    // Delete a borrow list item
+    suspend fun deleteBorrowListItem(borrowListItem: BorrowListItem) {
+        borrowListDAO.deleteBorrowListItem(borrowListItem)
+    }
+
+    // NEW: Create borrow list with inventory update
+    suspend fun createBorrowListWithInventoryUpdate(
+        borrowList: BorrowList,
+        items: List<BorrowListItem>,
+        itemRepository: ItemRepository
+    ): Long {
+        // Insert the borrow list
+        val borrowListId = insertBorrowList(borrowList)
+
+        // Insert each item and update inventory
+        items.forEach { borrowItem ->
+            val itemWithId = borrowItem.copy(borrowListId = borrowListId. toInt())
+            insertBorrowListItem(itemWithId)
+
+            // Decrease available quantity in inventory
+            itemRepository.decreaseAvailableQuantity(borrowItem.itemId, borrowItem.quantityBorrowed)
+        }
+
+        return borrowListId
+    }
+
+    // NEW: Return borrow list and update inventory
+    suspend fun returnBorrowListWithInventoryUpdate(
+        borrowList: BorrowList,
+        itemRepository: ItemRepository
+    ) {
+        // Get all items in this borrow list
+        val borrowedItems = getBorrowListItems(borrowList.id)
+
+        // Update borrow list status
+        val updatedBorrowList = borrowList.copy(
+            status = "Returned",
+            returnDate = System.currentTimeMillis()
+        )
+        updateBorrowList(updatedBorrowList)
+
+        // Increase available quantity for each item
+        borrowedItems.forEach { borrowItem ->
+            itemRepository.increaseAvailableQuantity(borrowItem.itemId, borrowItem.quantityBorrowed)
+        }
+    }
 }

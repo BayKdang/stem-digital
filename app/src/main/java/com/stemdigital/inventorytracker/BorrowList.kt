@@ -11,8 +11,8 @@ data class BorrowList(
     val phoneNumber: String,
     val department: String,
     val classroomNumber: String,
-    val borrowDate: Long = System.currentTimeMillis(),
+    val borrowDate: Long,
     val returnDate: Long?  = null,
-    val status: String = "Pending", // Pending, Returned, Overdue
+    val status:  String = "Not Returned",  // Changed from "Pending" to "Not Returned"
     val notes: String = ""
 )

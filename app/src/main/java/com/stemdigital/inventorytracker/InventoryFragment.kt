@@ -185,7 +185,7 @@ class InventoryFragment : Fragment() {
         if (searchText.isNotEmpty()) {
             filteredItems = filteredItems.filter {
                 it.name.contains(searchText, ignoreCase = true) ||
-                        it.description.contains(searchText, ignoreCase = true)
+                        it.notes.contains(searchText, ignoreCase = true)
             }
         }
 

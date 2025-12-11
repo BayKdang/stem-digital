@@ -19,6 +19,7 @@ import kotlinx.coroutines.launch
 class BorrowHistoryFragment : Fragment() {
 
     private lateinit var borrowRepository: BorrowRepository
+    private lateinit var itemRepository: ItemRepository
     private lateinit var borrowListAdapter:  BorrowListAdapter
     private lateinit var recyclerView: RecyclerView
     private lateinit var emptyStateContainer: LinearLayout
@@ -39,6 +40,7 @@ class BorrowHistoryFragment : Fragment() {
         // Initialize database
         val database = AppDatabase.getDatabase(requireContext())
         borrowRepository = BorrowRepository(database. borrowListDAO())
+        itemRepository = ItemRepository(database.itemDAO())
 
         // Initialize views
         recyclerView = view.findViewById(R.id.borrow_history_recycler)
@@ -70,7 +72,7 @@ class BorrowHistoryFragment : Fragment() {
 
     private fun setupTabs() {
         tabLayout.addTab(tabLayout.newTab().setText("All"))
-        tabLayout.addTab(tabLayout.newTab().setText("Pending"))
+        tabLayout.addTab(tabLayout.newTab().setText("Not Returned"))
         tabLayout.addTab(tabLayout.newTab().setText("Returned"))
 
         tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
@@ -80,14 +82,14 @@ class BorrowHistoryFragment : Fragment() {
             }
 
             override fun onTabUnselected(tab: TabLayout.Tab?) {}
-            override fun onTabReselected(tab: TabLayout. Tab?) {}
+            override fun onTabReselected(tab: TabLayout.Tab?) {}
         })
     }
 
     private fun loadBorrowLists(filter: String) {
         lifecycleScope.launch {
             val flow = when (filter) {
-                "Pending" -> borrowRepository.getBorrowListsByStatus("Pending")
+                "Not Returned" -> borrowRepository.getBorrowListsByStatus("Not Returned")
                 "Returned" -> borrowRepository.getBorrowListsByStatus("Returned")
                 else -> borrowRepository.getAllBorrowLists()
             }
@@ -124,19 +126,31 @@ class BorrowHistoryFragment : Fragment() {
     private fun markAsReturned(borrowList: BorrowList) {
         AlertDialog.Builder(requireContext())
             .setTitle("Mark as Returned")
-            .setMessage("Mark this borrow list as returned?")
+            .setMessage("Mark this borrow list as returned? This will restore the items to inventory.")
             .setPositiveButton("Yes") { _, _ ->
                 lifecycleScope.launch {
-                    val updatedBorrowList = borrowList.copy(
-                        status = "Returned",
-                        returnDate = System.currentTimeMillis()
-                    )
-                    borrowRepository.updateBorrowList(updatedBorrowList)
-                    Toast.makeText(
-                        requireContext(),
-                        "Marked as returned successfully!",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    try {
+                        // Initialize repository
+                        val database = AppDatabase.getDatabase(requireContext())
+                        val itemRepository = ItemRepository(database.itemDAO())
+
+                        // Return items and update inventory
+                        borrowRepository.returnBorrowListWithInventoryUpdate(
+                            borrowList = borrowList,
+                            itemRepository = itemRepository
+                        )
+                        Toast.makeText(
+                            requireContext(),
+                            "Marked as returned and inventory updated!",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    } catch (e: Exception) {
+                        Toast.makeText(
+                            requireContext(),
+                            "Error: ${e.message}",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
                 }
             }
             .setNegativeButton("Cancel", null)

@@ -4,6 +4,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import android.graphics.Color
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.button.MaterialButton
 
@@ -29,7 +30,15 @@ class ItemAdapter(
             itemQuantity.text = item.quantity.toString()
             itemSerialNumber.text = if (item.serialNumber.isEmpty()) "N/A" else item.serialNumber
             itemStatus.text = item.status
-            itemDescription.text = if (item.description.isEmpty()) "No description" else item.description
+//            itemDescription.text = if (item.description.isEmpty()) "No description" else item.description
+
+            itemStatus.setTextColor(
+                when {
+                    item.availableQuantity == 0 -> Color.RED
+                    item. availableQuantity < item.quantity / 2 -> Color.rgb(255, 165, 0) // Orange
+                    else -> Color.GREEN
+                }
+            )
 
             // Edit button click listener
             btnEdit.setOnClickListener {
