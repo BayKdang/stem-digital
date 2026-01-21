@@ -18,28 +18,30 @@ class BorrowListAdapter(
     private val onDelete: (BorrowList) -> Unit = {}
 ) : RecyclerView.Adapter<BorrowListAdapter.BorrowListViewHolder>() {
 
-    inner class BorrowListViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+    inner class BorrowListViewHolder(itemView:  View) : RecyclerView.ViewHolder(itemView) {
         private val borrowerName: TextView = itemView.findViewById(R.id.borrower_name)
-        private val borrowerPhone: TextView = itemView. findViewById(R.id.borrower_phone)
+        private val borrowId: TextView = itemView.findViewById(R.id.borrow_id)  // NEW
+        private val borrowerPhone:  TextView = itemView.findViewById(R.id.borrower_phone)
         private val borrowerDepartment: TextView = itemView.findViewById(R.id.borrower_department)
         private val borrowerClassroom: TextView = itemView.findViewById(R.id.borrower_classroom)
         private val borrowStatus: TextView = itemView.findViewById(R.id.borrow_status)
         private val borrowDate: TextView = itemView.findViewById(R.id.borrow_date)
         private val borrowedItems: TextView = itemView.findViewById(R.id.borrowed_items)
-        private val btnViewDetails: MaterialButton = itemView. findViewById(R.id.btn_view_details)
+        private val btnViewDetails:  MaterialButton = itemView.findViewById(R.id.btn_view_details)
         private val btnMarkReturned: MaterialButton = itemView.findViewById(R.id.btn_mark_returned)
         private val btnDelete: MaterialButton = itemView.findViewById(R.id.btn_delete_borrow)
 
-        fun bind(borrowList: BorrowList) {
+        fun bind(borrowList:  BorrowList) {
             borrowerName.text = borrowList.borrowerName
+            borrowId.text = borrowList.borrowId  // NEW:  Display Borrow ID
             borrowerPhone.text = borrowList.phoneNumber
             borrowerDepartment.text = borrowList.department
             borrowerClassroom.text = borrowList.classroomNumber
-            borrowStatus. text = borrowList.status
+            borrowStatus.text = borrowList.status
             borrowDate.text = formatDate(borrowList.borrowDate)
 
             // Get items for this borrow list
-            val items = borrowListItems[borrowList. id] ?: emptyList()
+            val items = borrowListItems[borrowList.id] ?: emptyList()
             borrowedItems.text = if (items.isEmpty()) {
                 "No items"
             } else {

@@ -17,7 +17,7 @@ import androidx.room.PrimaryKey
             entity = Item::class,
             parentColumns = ["id"],
             childColumns = ["itemId"],
-            onDelete = ForeignKey. RESTRICT
+            onDelete = ForeignKey.RESTRICT
         )
     ]
 )
@@ -25,6 +25,7 @@ data class BorrowListItem(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
     val borrowListId: Int,
+    val borrowId: String,
     val itemId: Int,
     val itemName: String,
     val quantityBorrowed: Int

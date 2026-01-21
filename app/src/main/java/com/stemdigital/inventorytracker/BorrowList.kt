@@ -7,12 +7,13 @@ import androidx.room.PrimaryKey
 data class BorrowList(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
+    val borrowId: String,
     val borrowerName: String,
     val phoneNumber: String,
     val department: String,
     val classroomNumber: String,
     val borrowDate: Long,
     val returnDate: Long?  = null,
-    val status:  String = "Not Returned",  // Changed from "Pending" to "Not Returned"
+    val status: String = "Not Returned",
     val notes: String = ""
 )

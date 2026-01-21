@@ -12,7 +12,7 @@ import com.google.android.material.checkbox.MaterialCheckBox
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 
-class CreateBorrowFragment :  Fragment() {
+class CreateBorrowFragment :   Fragment() {
 
     private lateinit var repository: ItemRepository
     private lateinit var borrowRepository: BorrowRepository
@@ -42,7 +42,7 @@ class CreateBorrowFragment :  Fragment() {
         return inflater.inflate(R.layout.fragment_create_borrow, container, false)
     }
 
-    override fun onViewCreated(view:  View, savedInstanceState: Bundle?) {
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         // Initialize database
@@ -77,11 +77,11 @@ class CreateBorrowFragment :  Fragment() {
         lifecycleScope.launch {
             // Load Projectors
             val projectors = repository.getAvailableItemsByCategories(listOf("Projector"))
-                .firstOrNull() ?: emptyList()
-            availableProjectors = projectors.filter { it.availableQuantity > 0 }
+                .firstOrNull() ?:emptyList()
+            availableProjectors = projectors. filter { it.availableQuantity > 0 }
 
             val projectorNames = listOf("Select Projector") + availableProjectors.map {
-                "${it.name} - ${it.serialNumber}"
+                "${it.name} - ${it. serialNumber}"
             }
             val projectorAdapter = ArrayAdapter(
                 requireContext(),
@@ -94,10 +94,10 @@ class CreateBorrowFragment :  Fragment() {
             // Load Power Strips
             val powerStrips = repository.getAvailableItemsByCategories(listOf("Power Strip"))
                 .firstOrNull() ?: emptyList()
-            availablePowerStrips = powerStrips.filter { it. availableQuantity > 0 }
+            availablePowerStrips = powerStrips.filter { it.availableQuantity > 0 }
 
-            val powerStripNames = listOf("Select Power Strip") + availablePowerStrips.map {
-                "${it.name} - ${it. serialNumber}"
+            val powerStripNames = listOf("Select Power Strip") + availablePowerStrips. map {
+                "${it.name} - ${it.serialNumber}"
             }
             val powerStripAdapter = ArrayAdapter(
                 requireContext(),
@@ -108,7 +108,7 @@ class CreateBorrowFragment :  Fragment() {
             spinnerPowerStrip.adapter = powerStripAdapter
 
             // Load Accessories (cables, pointers, etc.)
-            val accessories = repository.getAvailableItemsByCategories(
+            val accessories = repository. getAvailableItemsByCategories(
                 listOf("Cable", "Pointer", "Extension Cord", "Accessory")
             ).firstOrNull() ?:emptyList()
 
@@ -143,7 +143,7 @@ class CreateBorrowFragment :  Fragment() {
         val classroom = etClassroom.text.toString().trim()
         val notes = etNotes.text.toString().trim()
 
-        if (borrowerName.isEmpty()) {
+        if (borrowerName. isEmpty()) {
             Toast.makeText(requireContext(), "Please enter borrower name", Toast.LENGTH_SHORT).show()
             return
         }
@@ -163,6 +163,9 @@ class CreateBorrowFragment :  Fragment() {
             return
         }
 
+        // NEW: Generate unique Borrow ID
+        val borrowId = BorrowIdGenerator.generateUniqueBorrowId()
+
         // Collect selected items
         val selectedItems = mutableListOf<BorrowListItem>()
 
@@ -172,6 +175,7 @@ class CreateBorrowFragment :  Fragment() {
             selectedItems.add(
                 BorrowListItem(
                     borrowListId = 0, // Will be set after insert
+                    borrowId = borrowId,  // NEW: Add Borrow ID
                     itemId = projector.id,
                     itemName = "${projector.name} - ${projector.serialNumber}",
                     quantityBorrowed = 1
@@ -185,6 +189,7 @@ class CreateBorrowFragment :  Fragment() {
             selectedItems.add(
                 BorrowListItem(
                     borrowListId = 0,
+                    borrowId = borrowId,  // NEW: Add Borrow ID
                     itemId = powerStrip.id,
                     itemName = "${powerStrip.name} - ${powerStrip.serialNumber}",
                     quantityBorrowed = 1
@@ -198,6 +203,7 @@ class CreateBorrowFragment :  Fragment() {
             selectedItems.add(
                 BorrowListItem(
                     borrowListId = 0,
+                    borrowId = borrowId,  // NEW: Add Borrow ID
                     itemId = hdmi.id,
                     itemName = hdmi.name,
                     quantityBorrowed = 1
@@ -210,6 +216,7 @@ class CreateBorrowFragment :  Fragment() {
             selectedItems.add(
                 BorrowListItem(
                     borrowListId = 0,
+                    borrowId = borrowId,  // NEW: Add Borrow ID
                     itemId = vga.id,
                     itemName = vga.name,
                     quantityBorrowed = 1
@@ -222,6 +229,7 @@ class CreateBorrowFragment :  Fragment() {
             selectedItems.add(
                 BorrowListItem(
                     borrowListId = 0,
+                    borrowId = borrowId,  // NEW: Add Borrow ID
                     itemId = pointer.id,
                     itemName = pointer.name,
                     quantityBorrowed = 1
@@ -234,6 +242,7 @@ class CreateBorrowFragment :  Fragment() {
             selectedItems.add(
                 BorrowListItem(
                     borrowListId = 0,
+                    borrowId = borrowId,  // NEW: Add Borrow ID
                     itemId = extensionCord.id,
                     itemName = extensionCord.name,
                     quantityBorrowed = 1
@@ -250,6 +259,7 @@ class CreateBorrowFragment :  Fragment() {
         lifecycleScope.launch {
             try {
                 val borrowList = BorrowList(
+                    borrowId = borrowId,  // NEW: Add Borrow ID to BorrowList
                     borrowerName = borrowerName,
                     phoneNumber = phoneNumber,
                     department = department,
@@ -266,9 +276,9 @@ class CreateBorrowFragment :  Fragment() {
                     itemRepository = repository
                 )
 
-                Toast.makeText(
+                Toast. makeText(
                     requireContext(),
-                    "Borrow list created successfully! ",
+                    "Borrow list created!  ID:$borrowId",  // NEW: Show Borrow ID in toast
                     Toast.LENGTH_SHORT
                 ).show()
 

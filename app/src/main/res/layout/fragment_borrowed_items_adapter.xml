@@ -7,14 +7,16 @@
     android:background="@color/background_light"
     android:layout_marginBottom="8dp">
 
-    <!-- Item Icon -->
-    <TextView
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:text="📦"
-        android:textSize="24sp"
-        android:gravity="center"
-        android:layout_marginEnd="12dp" />
+    <!-- Item Image (instead of emoji box) -->
+    <ImageView
+        android:id="@+id/iv_item_image"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:scaleType="centerCrop"
+        android:src="@drawable/ic_placeholder_image"
+        android:contentDescription="Item image"
+        android:layout_marginEnd="12dp"
+        android:background="@color/white" />
 
     <!-- Item Details -->
     <LinearLayout
@@ -39,7 +41,18 @@
             android:layout_height="wrap_content"
             android:text="Quantity: 1"
             android:textSize="14sp"
-            android:textColor="@color/text_secondary" />
+            android:textColor="@color/text_secondary"
+            android:layout_marginBottom="4dp" />
+
+        <!-- NEW: Borrow ID (small) -->
+        <TextView
+            android:id="@+id/tv_borrow_id"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="B-2026-0001"
+            android:textSize="11sp"
+            android:textColor="@color/primary_navy"
+            android:textStyle="bold" />
 
     </LinearLayout>
 

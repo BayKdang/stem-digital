@@ -9,12 +9,14 @@ data class Item(
     val id: Int = 0,
     val name: String,
     val category: String,
-    val serialNumber: String,  // Empty string for batch items like cables
+    val serialNumber: String,
     val quantity: Int,
-    val availableQuantity: Int,  // NEW: Track available (not borrowed) quantity
-    val status: String,  // "Available", "Borrowed", "Maintenance", "Damaged"
+    val availableQuantity: Int,
+    val status: String,
     val location: String,
     val dateAdded: Long,
-    val lastUpdated: Long,
-    val notes: String = ""
+    val lastUpdated:  Long,
+    val notes: String = "",
+    val imageUri: String = "",
+    val currentBorrowId: String = ""
 )

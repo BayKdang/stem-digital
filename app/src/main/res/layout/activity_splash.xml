@@ -7,16 +7,32 @@
     android:orientation="vertical"
     android:background="@color/primary_navy">
 
+    <!-- RUPP University Logo -->
+    <ImageView
+        android:id="@+id/university_logo"
+        android:layout_width="120dp"
+        android:layout_height="120dp"
+        android:layout_marginBottom="24dp"
+        android:src="@drawable/rupp_logo"
+        android:contentDescription="RUPP Logo"
+        android:scaleType="centerInside" />
+
+    <!-- Divider -->
+    <View
+        android:layout_width="100dp"
+        android:layout_height="2dp"
+        android:background="@color/white"
+        android:layout_marginBottom="32dp" />
+
     <!-- App Logo/Icon -->
     <ImageView
         android:id="@+id/app_logo"
         android:layout_width="120dp"
         android:layout_height="120dp"
         android:layout_marginBottom="24dp"
-        android:src="@mipmap/ic_launcher_round"
+        android:src="@drawable/fe_logo"
         android:contentDescription="@string/app_name"
-        android:scaleType="centerInside"
-        app:tint="@color/white" />
+        android:scaleType="centerInside" />
 
     <!-- App Name -->
     <TextView
