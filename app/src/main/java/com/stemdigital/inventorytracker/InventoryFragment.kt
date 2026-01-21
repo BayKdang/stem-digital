@@ -1,18 +1,18 @@
 package com.stemdigital.inventorytracker
 
-import android.os. Bundle
+import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.text.TextWatcher
-import android.text. Editable
+import android.text.Editable
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview. widget.RecyclerView
+import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.textfield.MaterialAutoCompleteTextView
-import com. google.android.material.textfield.TextInputEditText
+import com.google.android.material.textfield.TextInputEditText
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
@@ -25,21 +25,8 @@ class InventoryFragment : Fragment() {
     private lateinit var repository: ItemRepository
     private lateinit var itemAdapter: ItemAdapter
 
-    // Category list
-    private val categories = listOf(
-        "All Categories",
-        "Projectors",
-        "DP",
-        "HDMI",
-        "Strips",
-        "Electronics",
-        "Sensors",
-        "Microcontrollers",
-        "Resistors",
-        "Capacitors"
-    )
-
     private var allItems: List<Item> = emptyList()
+    private var allCategories: MutableList<String> = mutableListOf("All Categories")  // NEW
     private var selectedCategory = "All Categories"
 
     override fun onCreateView(
@@ -58,7 +45,7 @@ class InventoryFragment : Fragment() {
         repository = ItemRepository(database.itemDAO())
 
         // Initialize views
-        recyclerView = view.findViewById(R. id.inventory_recycler_view)
+        recyclerView = view.findViewById(R.id.inventory_recycler_view)
         searchInput = view.findViewById(R.id.search_input)
         filterDropdown = view.findViewById(R.id.filter_dropdown)
         emptyStateContainer = view.findViewById(R.id.empty_state_container)
@@ -69,10 +56,10 @@ class InventoryFragment : Fragment() {
             emptyList(),
             onEdit = { item ->
                 // Navigate to EditItemFragment with item ID
-                val bundle = Bundle(). apply {
+                val bundle = Bundle().apply {
                     putInt("item_id", item.id)
                 }
-                val editFragment = EditItemFragment(). apply {
+                val editFragment = EditItemFragment().apply {
                     arguments = bundle
                 }
                 // Replace current fragment with EditItemFragment
@@ -86,14 +73,14 @@ class InventoryFragment : Fragment() {
                 androidx.appcompat.app.AlertDialog.Builder(requireContext())
                     .setTitle("Delete Item")
                     .setMessage("Are you sure you want to delete \"${item.name}\"?")
-                    .setPositiveButton("Delete") { dialog, _ ->
+                    . setPositiveButton("Delete") { dialog, _ ->
                         // Delete item from database
                         lifecycleScope.launch {
                             repository.deleteItem(item)
                             android.widget.Toast.makeText(
                                 requireContext(),
                                 "Deleted: ${item.name}",
-                                android.widget.Toast.LENGTH_SHORT
+                                android.widget.Toast. LENGTH_SHORT
                             ).show()
                         }
                         dialog.dismiss()
@@ -101,15 +88,12 @@ class InventoryFragment : Fragment() {
                     .setNegativeButton("Cancel") { dialog, _ ->
                         dialog.dismiss()
                     }
-                    .show()
+                    . show()
             }
         )
         recyclerView.adapter = itemAdapter
 
-        // Setup filter dropdown
-        setupFilterDropdown()
-
-        // Load items from database
+        // Load items and categories from database
         loadItems()
 
         // Search functionality
@@ -125,7 +109,7 @@ class InventoryFragment : Fragment() {
 
         // Filter dropdown listener
         filterDropdown.setOnItemClickListener { parent, view, position, id ->
-            selectedCategory = categories[position]
+            selectedCategory = allCategories[position]
             filterItems()
 
             // Dismiss dropdown and clear focus
@@ -135,17 +119,17 @@ class InventoryFragment : Fragment() {
     }
 
     private fun setupFilterDropdown() {
-        // Create adapter for dropdown
+        // Create adapter for dropdown with dynamic categories
         val adapter = ArrayAdapter(
             requireContext(),
             android.R.layout.simple_dropdown_item_1line,
-            categories
+            allCategories  // NEW: Use dynamic categories
         )
 
         // Set adapter to dropdown
         filterDropdown.setAdapter(adapter)
 
-        // Set dropdown height to show only ~5 items (half screen)
+        // Set dropdown height to show only ~5 items
         filterDropdown.setDropDownHeight(800)
 
         // Show dropdown when clicked
@@ -155,13 +139,23 @@ class InventoryFragment : Fragment() {
         }
 
         // Set default selection
-        filterDropdown.setText(categories[0], false)
+        filterDropdown.setText(allCategories[0], false)
     }
 
     private fun loadItems() {
         lifecycleScope.launch {
             repository.getAllItems().collectLatest { items ->
                 allItems = items
+
+                // NEW: Extract unique categories from items
+                val categoriesSet = items.map { it.category }.toSet()
+                allCategories.clear()
+                allCategories.add("All Categories")
+                allCategories.addAll(categoriesSet. sorted())  // Add sorted categories
+
+                // Setup dropdown with new categories
+                setupFilterDropdown()
+
                 if (allItems.isEmpty()) {
                     showEmptyState()
                 } else {
@@ -185,7 +179,7 @@ class InventoryFragment : Fragment() {
         if (searchText.isNotEmpty()) {
             filteredItems = filteredItems.filter {
                 it.name.contains(searchText, ignoreCase = true) ||
-                        it.description.contains(searchText, ignoreCase = true)
+                        it.notes.contains(searchText, ignoreCase = true)
             }
         }
 

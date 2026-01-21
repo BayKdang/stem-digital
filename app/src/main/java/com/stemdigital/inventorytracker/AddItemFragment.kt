@@ -1,16 +1,23 @@
 package com.stemdigital.inventorytracker
 
+import android.app.Activity
+import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.ImageDecoder
+import android.os.Build
 import android.os.Bundle
-import androidx.fragment.app.Fragment
+import android.provider.MediaStore
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
+import android.widget.ImageView
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.button.MaterialButton
-import com.google.android.material.textfield. MaterialAutoCompleteTextView
-import com. google.android.material.textfield.TextInputEditText
-import com.stemdigital.inventorytracker. AppDatabase
+import com.google.android.material.textfield.MaterialAutoCompleteTextView
+import com.google.android.material.textfield.TextInputEditText
 import kotlinx.coroutines.launch
 
 class AddItemFragment : Fragment() {
@@ -25,10 +32,18 @@ class AddItemFragment : Fragment() {
     private lateinit var cancelButton: MaterialButton
     private lateinit var repository: ItemRepository
 
+    // Image components
+    private lateinit var selectedImageButton: MaterialButton
+    private lateinit var itemImageView: ImageView
+    private var selectedBitmap: Bitmap?  = null
+
     private val categories = listOf(
-        "Projectors",
-        "Cables",
-        "Strips",
+        "Projector",
+        "Power Strip",
+        "Cable",
+        "Pointer",
+        "Extension Cord",
+        "Accessory",
         "Electronics",
         "Sensors",
         "Microcontrollers",
@@ -43,6 +58,33 @@ class AddItemFragment : Fragment() {
         "Maintenance",
         "Archived"
     )
+
+    // Gallery picker
+    private val pickImageFromGallery = registerForActivityResult(
+        ActivityResultContracts.GetContent()
+    ) { uri ->
+        if (uri != null) {
+            selectedBitmap = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES. P) {
+                ImageDecoder.decodeBitmap(ImageDecoder.createSource(requireActivity().contentResolver, uri))
+            } else {
+                @Suppress("DEPRECATION")
+                MediaStore.Images.Media.getBitmap(requireActivity().contentResolver, uri)
+            }
+            itemImageView.setImageBitmap(selectedBitmap)
+            selectedImageButton.text = "Change Image"
+        }
+    }
+
+    // Camera picker
+    private val pickImageFromCamera = registerForActivityResult(
+        ActivityResultContracts.TakePicturePreview()
+    ) { bitmap ->
+        if (bitmap != null) {
+            selectedBitmap = bitmap
+            itemImageView.setImageBitmap(selectedBitmap)
+            selectedImageButton.text = "Change Image"
+        }
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -69,9 +111,16 @@ class AddItemFragment : Fragment() {
         addButton = view.findViewById(R.id.btn_add_item)
         cancelButton = view.findViewById(R.id.btn_cancel)
 
+        // Image components
+        itemImageView = view.findViewById(R.id.item_image_view)
+        selectedImageButton = view.findViewById(R.id.btn_select_image)
+
         // Setup dropdowns
         setupCategoryDropdown()
         setupStatusDropdown()
+
+        // Setup image picker
+        setupImagePicker()
 
         // Add button click listener
         addButton.setOnClickListener {
@@ -81,6 +130,22 @@ class AddItemFragment : Fragment() {
         // Cancel button click listener
         cancelButton.setOnClickListener {
             clearInputs()
+            parentFragmentManager.popBackStack()
+        }
+    }
+
+    private fun setupImagePicker() {
+        selectedImageButton.setOnClickListener {
+            // Show dialog with camera and gallery options
+            androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                .setTitle("Select Image Source")
+                .setItems(arrayOf("Camera", "Gallery")) { _, which ->
+                    when (which) {
+                        0 -> pickImageFromCamera.launch(null)
+                        1 -> pickImageFromGallery.launch("image/*")
+                    }
+                }
+                .show()
         }
     }
 
@@ -105,7 +170,7 @@ class AddItemFragment : Fragment() {
             statuses
         )
         statusDropdown.setAdapter(adapter)
-        statusDropdown.setText("Available", false) // Set default value
+        statusDropdown.setText("Available", false)
 
         statusDropdown.setOnClickListener {
             statusDropdown.requestFocus()
@@ -119,7 +184,7 @@ class AddItemFragment : Fragment() {
         val category = categoryDropdown.text.toString().trim()
         val serialNumber = serialNumberInput.text.toString().trim()
         val status = statusDropdown.text.toString().trim()
-        val description = descriptionInput.text.toString().trim()
+        val notes = descriptionInput.text.toString().trim()
 
         // Validation
         if (name.isEmpty()) {
@@ -144,30 +209,55 @@ class AddItemFragment : Fragment() {
 
         val quantity = quantityStr.toIntOrNull() ?: 0
 
-        // Create new item
+        if (quantity <= 0) {
+            quantityInput.error = "Quantity must be greater than 0"
+            return
+        }
+
+        // Create new item with all required fields
         val newItem = Item(
             name = name,
-            quantity = quantity,
             category = category,
             serialNumber = serialNumber,
+            quantity = quantity,
+            availableQuantity = quantity,
             status = status,
-            description = description
+            location = "",
+            dateAdded = System.currentTimeMillis(),
+            lastUpdated = System.currentTimeMillis(),
+            notes = notes,
+            imageUri = "",  // Will be updated after image is saved
+            currentBorrowId = ""  // NEW:  Add this field
         )
 
         // Add to database
         lifecycleScope.launch {
-            repository.insertItem(newItem)
+            val insertedItemId = repository.insertItem(newItem).toInt()
+
+            // Save image if selected
+            if (selectedBitmap != null) {
+                val imagePath = ImageUtils.saveBitmapToInternalStorage(requireContext(), selectedBitmap!!, insertedItemId)
+                if (! imagePath.isNullOrEmpty()) {
+                    val updatedItem = newItem.copy(id = insertedItemId, imageUri = imagePath)
+                    repository.updateItem(updatedItem)
+                }
+            }
+
             android.widget.Toast.makeText(requireContext(), "Item added successfully!", android.widget.Toast.LENGTH_SHORT).show()
             clearInputs()
+            parentFragmentManager.popBackStack()
         }
     }
 
     private fun clearInputs() {
-        nameInput.text?.clear()
+        nameInput.text?. clear()
         quantityInput.text?.clear()
         categoryDropdown.text?.clear()
         serialNumberInput.text?.clear()
         statusDropdown.setText("Available", false)
         descriptionInput.text?.clear()
+        itemImageView.setImageResource(R.drawable.ic_placeholder_image)
+        selectedImageButton.text = "Select Image"
+        selectedBitmap = null
     }
 }

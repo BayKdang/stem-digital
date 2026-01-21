@@ -153,22 +153,34 @@ class BorrowDetailFragment : Fragment() {
     private fun markAsReturned() {
         AlertDialog.Builder(requireContext())
             .setTitle("Mark as Returned")
-            .setMessage("Mark this borrow list as returned?")
+            .setMessage("Mark this borrow list as returned?  This will restore the items to inventory.")
             .setPositiveButton("Yes") { _, _ ->
                 lifecycleScope.launch {
-                    val updatedBorrowList = borrowList.copy(
-                        status = "Returned",
-                        returnDate = System.currentTimeMillis()
-                    )
-                    borrowRepository.updateBorrowList(updatedBorrowList)
-                    Toast.makeText(
-                        requireContext(),
-                        "Marked as returned successfully!",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    try {
+                        // Initialize item repository
+                        val database = AppDatabase.getDatabase(requireContext())
+                        val itemRepository = ItemRepository(database.itemDAO())
 
-                    // Reload the details
-                    loadBorrowListDetails(borrowList.id)
+                        // Return items and update inventory
+                        borrowRepository.returnBorrowListWithInventoryUpdate(
+                            borrowList = borrowList,
+                            itemRepository = itemRepository
+                        )
+                        Toast.makeText(
+                            requireContext(),
+                            "Marked as returned and inventory updated!",
+                            Toast.LENGTH_SHORT
+                        ).show()
+
+                        // Reload the details
+                        loadBorrowListDetails(borrowList.id)
+                    } catch (e: Exception) {
+                        Toast.makeText(
+                            requireContext(),
+                            "Error: ${e.message}",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
                 }
             }
             .setNegativeButton("Cancel", null)
