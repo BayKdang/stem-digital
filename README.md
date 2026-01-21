@@ -9,6 +9,13 @@
 
 Core Features (v1)
 - Asset catalog (projectors, adapters, cables, etc.)
-- Borrow/return process, with user name logging
+- Borrow/return process
 - Asset status tracking (Available, Borrowed, Maintenance)
 - Search/filter assets
+
+Core Features (v2)
+- Better Asset Catalog
+- Borrow/Return process (local)
+- View Detailed borrow history
+- Better UI
+- ...

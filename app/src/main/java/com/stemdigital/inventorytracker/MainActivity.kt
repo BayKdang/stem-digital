@@ -1,8 +1,8 @@
 package com.stemdigital.inventorytracker
 
 import android.os.Bundle
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.Fragment
 import com.google.android.material.bottomnavigation.BottomNavigationView
 
 class MainActivity : AppCompatActivity() {
@@ -21,37 +21,41 @@ class MainActivity : AppCompatActivity() {
 
         // Set default selection to Home
         bottomNavigation.selectedItemId = R.id.nav_home
+        if (savedInstanceState == null) {
+            loadFragment(HomeFragment())
+        }
 
         // Handle bottom navigation item clicks
         bottomNavigation.setOnItemSelectedListener { item ->
             when (item. itemId) {
-                R. id.nav_home -> {
-                    Toast.makeText(this, "Home", Toast.LENGTH_SHORT).show()
-                    // TODO: Navigate to Home Fragment
+                R.id.nav_home -> {
+                    loadFragment(HomeFragment())
                     true
                 }
                 R.id.nav_inventory -> {
-                    Toast.makeText(this, "Inventory", Toast.LENGTH_SHORT).show()
-                    // TODO: Navigate to Inventory Fragment
+                    loadFragment(InventoryFragment())
                     true
                 }
                 R.id.nav_add -> {
-                    Toast.makeText(this, "Add Item", Toast.LENGTH_SHORT).show()
-                    // TODO: Open Add Item Dialog/Activity
+                    loadFragment(AddItemFragment())
                     true
                 }
                 R.id.nav_settings -> {
-                    Toast.makeText(this, "Settings", Toast.LENGTH_SHORT).show()
-                    // TODO: Navigate to Settings Fragment
+                    loadFragment(SettingsFragment())
                     true
                 }
                 R.id.nav_info -> {
-                    Toast. makeText(this, "Info", Toast.LENGTH_SHORT).show()
-                    // TODO: Navigate to Info Fragment
+                    loadFragment(InfoFragment())
                     true
                 }
                 else -> false
             }
         }
+    }
+    private fun loadFragment(fragment: Fragment) {
+        val transaction = supportFragmentManager.beginTransaction()
+        transaction.replace(R.id.fragment_container, fragment)
+        transaction.addToBackStack(null)
+        transaction.commit()
     }
 }
